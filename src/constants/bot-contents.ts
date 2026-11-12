@@ -8,16 +8,15 @@ type TDashboardTabIndex = {
 
 export const tabs_title: TTabsTitle = Object.freeze({
     WORKSPACE: 'Workspace',
-    CHART: 'Chart',
 });
 
 export const DBOT_TABS: TDashboardTabIndex = Object.freeze({
     DASHBOARD: 0,
     BOT_BUILDER: 1,
-    CHART: 2,
-    ANALYSIS: 3,
-    TUTORIAL: 4,
-    FREE_BOTS: 5,
+    ANALYSIS: 2,
+    FREE_BOTS: 3,
+    ANALYSIS_V2: 4,
+    TRADING_VIEW: 5,
 });
 
 export const MAX_STRATEGIES = 10;
@@ -25,10 +24,10 @@ export const MAX_STRATEGIES = 10;
 export const TAB_IDS = [
     'id-dbot-dashboard',
     'id-bot-builder',
-    'id-charts',
     'id-analysis',
-    'id-tutorials',
     'id-free-bots',
+    'id-analysis-v2',
+    'id-trading-view',
 ];
 
 export const DEBOUNCE_INTERVAL_TIME = 500;
