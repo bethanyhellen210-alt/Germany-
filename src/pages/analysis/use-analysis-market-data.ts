@@ -116,35 +116,66 @@ const normalizeSymbol = (symbol: RawSymbol): AnalysisSymbol | null => {
 };
 
 export const waitForChartApi = async () => {
-    if (!chart_api.api) {
+    // Reuse the authenticated Deriv socket whenever possible. ChartAPI creates
+    // a second reference to the same singleton and can otherwise retain a stale
+    // connection during login/reconnect transitions.
+    let api = (api_base.api || chart_api.api) as any;
+
+    if (!api) {
+        await api_base.init();
+        api = api_base.api as any;
+    }
+    if (!api) {
         await chart_api.init();
+        api = chart_api.api as any;
     }
 
-    const api = chart_api.api as any;
-    if (!api?.connection || api.connection.readyState === WebSocket.OPEN) {
-        return api;
+    const waitForOpen = async (connection: WebSocket) => {
+        if (connection.readyState === WebSocket.OPEN) return;
+        if (connection.readyState === WebSocket.CLOSING || connection.readyState === WebSocket.CLOSED) {
+            throw new Error('Deriv market-data socket is closed. Reconnect your Deriv account and retry.');
+        }
+
+        await new Promise<void>((resolve, reject) => {
+            let settled = false;
+            const cleanup = () => {
+                window.clearTimeout(timeout);
+                connection.removeEventListener('open', onOpen);
+                connection.removeEventListener('error', onError);
+                connection.removeEventListener('close', onClose);
+            };
+            const finish = (error?: Error) => {
+                if (settled) return;
+                settled = true;
+                cleanup();
+                if (error) reject(error);
+                else resolve();
+            };
+            const onOpen = () => finish();
+            const onError = () => finish(new Error('Deriv market-data socket failed to connect.'));
+            const onClose = () => finish(new Error('Deriv market-data socket closed before connecting.'));
+            const timeout = window.setTimeout(
+                () => finish(new Error('Market data connection timeout. Check the Deriv connection and retry.')),
+                15000
+            );
+
+            connection.addEventListener('open', onOpen, { once: true });
+            connection.addEventListener('error', onError, { once: true });
+            connection.addEventListener('close', onClose, { once: true });
+
+            // Cover the race where the socket opens between the initial check
+            // and listener registration.
+            if (connection.readyState === WebSocket.OPEN) finish();
+            else if (connection.readyState >= WebSocket.CLOSING) onClose();
+        });
+    };
+
+    if (!api?.connection) {
+        throw new Error('Deriv market-data API is not initialized. Reconnect your Deriv account.');
     }
 
-    if (api.connection.readyState > WebSocket.OPEN) {
-        await chart_api.init(true);
-        return chart_api.api as any;
-    }
-
-    await new Promise<void>((resolve, reject) => {
-        const timeout = window.setTimeout(() => {
-            api.connection.removeEventListener('open', onOpen);
-            reject(new Error('Market data connection timeout'));
-        }, 10000);
-
-        const onOpen = () => {
-            window.clearTimeout(timeout);
-            resolve();
-        };
-
-        api.connection.addEventListener('open', onOpen, { once: true });
-    });
-
-    return chart_api.api as any;
+    await waitForOpen(api.connection);
+    return api;
 };
 
 const fetchTicks = async (symbol: string, pip?: number): Promise<AnalysisTick[]> => {
