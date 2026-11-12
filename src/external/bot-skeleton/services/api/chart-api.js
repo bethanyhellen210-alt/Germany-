@@ -14,7 +14,7 @@ class ChartAPI {
                 this.api.disconnect();
                 this.api.connection.removeEventListener('close', this.onsocketclose.bind(this));
             }
-            this.api = await generateDerivApiInstance();
+            this.api = await generateDerivApiInstance(force_create_connection);
             this.api?.connection.addEventListener('close', this.onsocketclose.bind(this));
 
             // Intercept the send method to filter active_symbols responses for chart
