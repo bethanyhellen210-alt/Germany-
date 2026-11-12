@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
 import ErrorBoundary from '@/components/error-component/error-boundary';
 import ErrorComponent from '@/components/error-component/error-component';
@@ -36,36 +36,23 @@ const ErrorComponentWrapper = observer(() => {
 const AppRoot = () => {
     const store = useStore();
     const api_base_initialized = useRef(false);
-    const [is_api_initialized, setIsApiInitialized] = useState(false);
 
-    // Initialize API
+    // Initialize the Deriv connection in the background. The interface should
+    // not wait for a WebSocket handshake or market metadata before rendering.
     useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            if (!is_api_initialized) {
-                setIsApiInitialized(true);
-            }
-        }, 5000);
+        if (api_base_initialized.current) return;
 
-        const initializeApi = async () => {
-            if (!api_base_initialized.current) {
-                try {
-                    await api_base.init();
-                    api_base_initialized.current = true;
-                } catch (error) {
-                    console.error('API initialization failed:', error);
-                    api_base_initialized.current = false;
-                } finally {
-                    setIsApiInitialized(true);
-                    clearTimeout(timeoutId); // Clear timeout if API init completes
-                }
-            }
-        };
+        // Mark before awaiting so React Strict Mode cannot start duplicate
+        // initialization while the first connection attempt is still pending.
+        api_base_initialized.current = true;
 
-        initializeApi();
-        return () => clearTimeout(timeoutId);
+        api_base.init().catch(error => {
+            console.error('API initialization failed:', error);
+            // Keep the interface visible; APIBase handles reconnection.
+        });
     }, []);
 
-    if (!store || !is_api_initialized) return <AppRootLoader />;
+    if (!store) return <AppRootLoader />;
 
     return (
         <Suspense fallback={<AppRootLoader />}>
