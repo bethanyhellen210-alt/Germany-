@@ -307,6 +307,17 @@ class APIBase {
                       ? [currentAccount]
                       : [];
 
+            // OAuth account snapshots can contain stale balances. Always prefer the
+            // freshly authorized balance for the currently connected account.
+            if (currentAccount) {
+                const currentIndex = accountList.findIndex(account => account.loginid === currentAccount.loginid);
+                if (currentIndex >= 0) {
+                    accountList[currentIndex] = { ...accountList[currentIndex], ...currentAccount };
+                } else {
+                    accountList.unshift(currentAccount);
+                }
+            }
+
             setAccountList(accountList); // Observable stream
             setAuthData({
                 balance: balance?.balance,
