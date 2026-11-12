@@ -172,7 +172,7 @@ class APIBase {
                 this.api.connection.removeEventListener('close', this.onsocketclose.bind(this));
             }
 
-            this.api = await generateDerivApiInstance();
+            this.api = await generateDerivApiInstance(force_create_connection);
 
             this.api?.connection.addEventListener('open', this.onsocketopen.bind(this));
             this.api?.connection.addEventListener('close', this.onsocketclose.bind(this));
@@ -199,7 +199,8 @@ class APIBase {
         if (this.time_interval) clearInterval(this.time_interval);
         this.time_interval = null;
 
-        chart_api.init(force_create_connection);
+        // APIBase owns socket creation; ChartAPI reuses that same singleton.
+        chart_api.init(false);
     }
 
     getConnectionStatus() {
