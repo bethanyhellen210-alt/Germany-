@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
 import ErrorBoundary from '@/components/error-component/error-boundary';
 import ErrorComponent from '@/components/error-component/error-component';
@@ -10,9 +10,7 @@ import './app-root.scss';
 
 const AppContent = lazy(() => import('./app-content'));
 
-const AppRootLoader = () => {
-    return <ChunkLoader message={localize('Loading...')} />;
-};
+const AppRootLoader = () => <ChunkLoader message={localize('Loading...')} />;
 
 const ErrorComponentWrapper = observer(() => {
     const { common } = useStore();
@@ -35,37 +33,22 @@ const ErrorComponentWrapper = observer(() => {
 
 const AppRoot = () => {
     const store = useStore();
-    const api_base_initialized = useRef(false);
-    const [is_api_initialized, setIsApiInitialized] = useState(false);
+    const api_initialization_started = useRef(false);
 
-    // Initialize API
+    // Do not block the sign-in/sign-up screen or app shell on the Deriv
+    // WebSocket handshake, active-symbol request, or market metadata.
     useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            if (!is_api_initialized) {
-                setIsApiInitialized(true);
-            }
-        }, 5000);
+        if (api_initialization_started.current) return;
+        api_initialization_started.current = true;
 
-        const initializeApi = async () => {
-            if (!api_base_initialized.current) {
-                try {
-                    await api_base.init();
-                    api_base_initialized.current = true;
-                } catch (error) {
-                    console.error('API initialization failed:', error);
-                    api_base_initialized.current = false;
-                } finally {
-                    setIsApiInitialized(true);
-                    clearTimeout(timeoutId); // Clear timeout if API init completes
-                }
-            }
-        };
-
-        initializeApi();
-        return () => clearTimeout(timeoutId);
+        void api_base.init().catch(error => {
+            console.error('[Startup] Deriv API initialization failed:', error);
+            // Keep the app usable for login and show connection state through
+            // the existing connection-status UI. APIBase handles reconnects.
+        });
     }, []);
 
-    if (!store || !is_api_initialized) return <AppRootLoader />;
+    if (!store) return <AppRootLoader />;
 
     return (
         <Suspense fallback={<AppRootLoader />}>
