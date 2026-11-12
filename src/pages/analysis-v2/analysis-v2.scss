@@ -1,0 +1,26 @@
+.analysis-v2-page {
+    align-items: flex-start;
+    background: #eef2f6;
+    display: flex;
+    height: var(--tab-content-height);
+    justify-content: center;
+    overflow: auto;
+    padding: 2.4rem 1.6rem 4rem;
+    width: 100%;
+
+    &__content {
+        max-width: 72rem;
+        width: 100%;
+    }
+
+    .digit-panel {
+        max-width: none;
+    }
+}
+
+@media (max-width: 1279px) {
+    .analysis-v2-page {
+        height: var(--tab-content-height-mobile);
+        padding: 1.2rem 0.8rem 3rem;
+    }
+}
