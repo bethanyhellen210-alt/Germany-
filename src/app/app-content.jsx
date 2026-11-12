@@ -8,7 +8,7 @@ import ChunkLoader from '@/components/loader/chunk-loader';
 import { getUrlBase } from '@/components/shared';
 import TransactionDetailsModal from '@/components/transaction-details';
 import { api_base, ApiHelpers, ServerTime } from '@/external/bot-skeleton';
-import { CONNECTION_STATUS } from '@/external/bot-skeleton/services/api/observables/connection-status-stream';
+import { CONNECTION_STATUS, setAccountList as setAccountListObservable } from '@/external/bot-skeleton/services/api/observables/connection-status-stream';
 import { useApiBase } from '@/hooks/useApiBase';
 import useDevMode from '@/hooks/useDevMode';
 import { useStore } from '@/hooks/useStore';
@@ -94,6 +94,24 @@ const AppContent = observer(() => {
 
     const handleMessage = React.useCallback(
         ({ data }) => {
+            if (data?.msg_type === 'balance' && !data?.error && data?.balance) {
+                const liveBalance = data.balance;
+                const loginid = liveBalance.loginid || client.loginid;
+                if (loginid && loginid === client.loginid && Number.isFinite(Number(liveBalance.balance))) {
+                    client.setBalance(String(liveBalance.balance));
+                    if (liveBalance.currency) client.setCurrency(liveBalance.currency);
+                    const updatedAccounts = (client.account_list || []).map(account =>
+                        account.loginid === loginid
+                            ? { ...account, balance: Number(liveBalance.balance), currency: liveBalance.currency || account.currency }
+                            : account
+                    );
+                    if (updatedAccounts.length) {
+                        client.setAccountList(updatedAccounts);
+                        setAccountListObservable(updatedAccounts);
+                    }
+                }
+            }
+
             if (data?.msg_type === 'proposal_open_contract' && !data?.error) {
                 const { proposal_open_contract } = data;
                 if (
@@ -104,7 +122,7 @@ const AppContent = observer(() => {
                 }
             }
         },
-        [recovered_transactions, recoverPendingContracts]
+        [client, recovered_transactions, recoverPendingContracts]
     );
 
     React.useEffect(() => {
