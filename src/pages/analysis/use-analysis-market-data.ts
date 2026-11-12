@@ -170,8 +170,16 @@ export const waitForChartApi = async () => {
         });
     };
 
+    // A closed/stale socket must be replaced, not returned as a permanent
+    // error. Reinitialize through APIBase so the trading app and Analysis share
+    // exactly one Deriv API instance and existing OAuth authorization is reused.
+    if (!api?.connection || api.connection.readyState >= WebSocket.CLOSING) {
+        await api_base.init(true);
+        api = api_base.api as any;
+    }
+
     if (!api?.connection) {
-        throw new Error('Deriv market-data API is not initialized. Reconnect your Deriv account.');
+        throw new Error('Unable to initialize Deriv market data. Please retry.');
     }
 
     await waitForOpen(api.connection);
