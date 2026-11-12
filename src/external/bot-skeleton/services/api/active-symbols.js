@@ -43,7 +43,16 @@ export default class ActiveSymbols {
      * }
      */
     async retrieveActiveSymbols(is_forced_update = false) {
-        await this.trading_times.initialise();
+        // Trading-times metadata is optional for the symbol selector. A stalled
+        // trading_times request must not prevent the active_symbols request from running.
+        try {
+            await Promise.race([
+                this.trading_times.initialise(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Trading-times initialization timeout')), 5000)),
+            ]);
+        } catch (error) {
+            console.warn('[ActiveSymbols] Continuing without trading-times metadata:', error);
+        }
 
         if (!is_forced_update && this.is_initialised) {
             await this.init_promise;
