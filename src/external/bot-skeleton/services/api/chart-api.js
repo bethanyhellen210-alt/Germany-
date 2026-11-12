@@ -9,7 +9,7 @@ class ChartAPI {
     }
 
     init = async (force_create_connection = false) => {
-        if (!this.api || force_create_connection) {
+        if (!this.api || force_create_connection || this.api.connection?.readyState > WebSocket.OPEN) {
             if (this.api?.connection) {
                 this.api.disconnect();
                 this.api.connection.removeEventListener('close', this.onsocketclose.bind(this));
