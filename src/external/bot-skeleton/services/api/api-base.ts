@@ -427,8 +427,6 @@ class APIBase {
                 throw new Error('No active symbols received from API');
             }
 
-            this.has_active_symbols = true;
-
             // Process active symbols using the dedicated service with fallback
             try {
                 const enrichmentTimeout = new Promise<never>((_, reject) =>
@@ -447,6 +445,10 @@ class APIBase {
                 this.pip_sizes = {};
             }
 
+            // Mark the feed ready only after the symbol array has actually been
+            // populated. Setting this before enrichment completes lets concurrent
+            // callers read an empty array and incorrectly treat it as loaded.
+            this.has_active_symbols = this.active_symbols.length > 0;
             this.toggleRunButton(false);
             return this.active_symbols;
         } catch (error) {
