@@ -1,0 +1,180 @@
+/* ELISY premium dark trading theme — presentation only; trading logic is unchanged. */
+:root {
+  --elisy-navy: #06122d;
+  --elisy-panel: #0a1734;
+  --elisy-panel-raised: #101d3d;
+  --elisy-blue: #173b86;
+  --elisy-cyan: #22d8f3;
+  --elisy-gold: #ffd52e;
+  --elisy-purple: #a77bff;
+  --elisy-run: #08ad9f;
+  --elisy-border: #263c69;
+  --elisy-text: #edf4ff;
+}
+
+.main,
+.main__container,
+.main__container > div,
+.main__container .dc-tabs__content,
+.tab__dashboard,
+.tab__dashboard__content,
+.quick-panel {
+  background: #030a19 !important;
+  color: var(--elisy-text);
+}
+
+.main { padding: 0; }
+.main__container .dc-tabs__list {
+  background: #071b46 !important;
+  border-bottom: 1px solid #18376c;
+}
+.main__container .dc-tabs__item {
+  color: #eef4ff !important;
+  min-height: 5.2rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.main__container .dc-tabs__item--active,
+.main__container .dc-tabs__active {
+  background: #10295c !important;
+  box-shadow: inset 0 -4px 0 #ff725e;
+}
+.main__container .dc-tabs__active-line { background: #ff725e !important; }
+.main__container .dc-tabs__content { overflow-y: auto !important; overscroll-behavior: contain; }
+
+.tab__dashboard__content {
+  height: auto !important;
+  min-height: calc(100vh - 16rem);
+  display: block !important;
+  overflow: visible !important;
+  padding: 2rem 1.6rem 11rem !important;
+}
+.tab__dashboard__header .title,
+.tab__dashboard__header .subtitle { color: #dceaff !important; }
+.tab__dashboard__header .title { color: #5ee7f5 !important; }
+.tab__dashboard__table { width: 100%; }
+.tab__dashboard__table__tiles {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.4rem;
+  padding: 1.2rem 0 !important;
+  align-items: stretch !important;
+}
+.tab__dashboard__table__block {
+  min-width: 0;
+  min-height: 20rem;
+  padding: 1.4rem !important;
+  border: 1px solid #5289d7;
+  border-bottom: 4px solid #5289d7;
+  border-radius: 2.4rem;
+  background: radial-gradient(ellipse at 50% 28%, #11275a 0%, #07122e 65%, #050b1d 100%);
+  box-shadow: 0 0 18px rgb(28 112 255 / 13%);
+  gap: 1rem;
+}
+.tab__dashboard__table__block:nth-child(2) {
+  border-color: #e6c52d;
+  border-bottom-color: #ffe13b;
+  background: radial-gradient(ellipse at 50% 28%, #332a13 0%, #17172a 70%, #080d20 100%);
+}
+.tab__dashboard__table__block:nth-child(3) {
+  border-color: #1bc8e8;
+  border-bottom-color: #1bc8e8;
+}
+.tab__dashboard__table__block:nth-child(4) {
+  border-color: #a982f5;
+  border-bottom-color: #a982f5;
+}
+.tab__dashboard__table__block .dc-text,
+.tab__dashboard__table__block span {
+  color: #dceaff !important;
+  font-weight: 800;
+}
+.tab__dashboard__table__images {
+  width: 100% !important;
+  height: 10rem !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0.4rem !important;
+}
+.tab__dashboard__table__images svg {
+  filter: drop-shadow(0 0 12px rgb(0 162 255 / 45%));
+}
+.tab__dashboard__table__block:nth-child(2) svg { filter: drop-shadow(0 0 12px rgb(255 205 42 / 55%)); }
+.tab__dashboard__table__block:nth-child(4) svg { filter: drop-shadow(0 0 12px rgb(169 130 245 / 55%)); }
+
+/* Consistent dark premium surfaces for bot cards, analysis panels and embedded tools. */
+[class*='free-bot'] [class*='card'],
+[class*='free-bots'] [class*='card'],
+[class*='analysis'] [class*='card'],
+[class*='trading-view'] [class*='card'],
+[class*='bot-card'] {
+  background: linear-gradient(145deg, #282318 0%, #111a31 75%) !important;
+  border: 1px solid #9a7a35 !important;
+  border-radius: 1.4rem !important;
+  color: #eef4ff !important;
+}
+[class*='free-bot'] button,
+[class*='free-bots'] button,
+[class*='bot-card'] button {
+  border-radius: 0.8rem !important;
+  font-weight: 800 !important;
+}
+
+/* Fixed mobile trading controls: retain the real Deriv Run/Stop handler. */
+.controls__section {
+  position: fixed !important;
+  left: 0;
+  right: 0;
+  bottom: 0 !important;
+  z-index: 30 !important;
+  padding: 0.8rem 1rem calc(0.8rem + env(safe-area-inset-bottom, 0)) !important;
+  background: #090909 !important;
+  border-top: 1px solid #343434 !important;
+  box-shadow: 0 -8px 24px rgb(0 0 0 / 30%);
+}
+.controls__buttons {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 5.6rem;
+  padding: 0 !important;
+  gap: 0 !important;
+}
+.controls__run-button,
+.controls__stop-button,
+.controls__buttons .animation__run-button,
+.controls__buttons .animation__stop-button {
+  min-width: 7.4rem;
+  min-height: 5.2rem !important;
+  border-radius: 0.6rem 0 0 0.6rem !important;
+  background: var(--elisy-run) !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+}
+.controls__animation {
+  height: 5.2rem !important;
+  min-width: 0;
+  border: 1px solid #343434;
+  border-radius: 0 0.6rem 0.6rem 0;
+  background: #101010;
+}
+.controls__animation .animation__container {
+  background: #101010 !important;
+  border-color: #343434 !important;
+  border-radius: 0 0.6rem 0.6rem 0;
+}
+.controls__animation .animation__text { color: #f3f3f3 !important; }
+.controls__animation .animation__progress { opacity: 0.65; }
+.main__container .dc-tabs__content { padding-bottom: 2rem; }
+
+@media (max-width: 480px) {
+  .tab__dashboard__table__block { min-height: 18rem; padding: 1rem !important; }
+  .tab__dashboard__table__images { height: 8rem !important; }
+  .tab__dashboard__content { padding-left: 1.2rem !important; padding-right: 1.2rem !important; }
+}
+@media (min-width: 768px) {
+  .tab__dashboard__content { padding-bottom: 3rem !important; }
+  .tab__dashboard__table__tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
