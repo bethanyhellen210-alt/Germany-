@@ -136,38 +136,51 @@ const AppContent = observer(() => {
         });
     };
 
+    // Workspace startup must never depend on the Deriv WebSocket or market
+    // metadata. Initialize local stores immediately and retrieve symbols in the
+    // background; a slow/offline API must not leave the user on an endless loader.
     const changeActiveSymbolLoadingState = () => {
         init();
+        setIsLoading(false);
 
         const retrieveActiveSymbols = () => {
-            const { active_symbols } = ApiHelpers.instance;
+            const activeSymbols = ApiHelpers?.instance?.active_symbols;
+            if (!activeSymbols?.retrieveActiveSymbols) return;
 
-            active_symbols.retrieveActiveSymbols(true).then(() => {
-                setIsLoading(false);
+            Promise.resolve(activeSymbols.retrieveActiveSymbols(true)).catch(error => {
+                console.warn('[Startup] Active symbols could not be loaded yet:', error);
             });
         };
 
         if (ApiHelpers?.instance?.active_symbols) {
             retrieveActiveSymbols();
-        } else {
-            // This is a workaround to fix the issue where the active symbols are not loaded immediately
-            // when the API is initialized. Should be replaced with RxJS pubsub
-            const intervalId = setInterval(() => {
-                if (ApiHelpers?.instance?.active_symbols) {
-                    clearInterval(intervalId);
-                    retrieveActiveSymbols();
-                }
-            }, 1000);
+            return;
         }
+
+        let attempts = 0;
+        const intervalId = setInterval(() => {
+            attempts += 1;
+            if (ApiHelpers?.instance?.active_symbols) {
+                clearInterval(intervalId);
+                retrieveActiveSymbols();
+            } else if (attempts >= 10) {
+                clearInterval(intervalId);
+                console.warn('[Startup] Continuing without market metadata; it can retry after connection.');
+            }
+        }, 1000);
     };
+
+    // Render the dashboard/workspace as soon as the app stores are ready.
+    // Do not wait for the WebSocket "open" event to reveal the application.
+    React.useEffect(() => {
+        init();
+        setIsLoading(false);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     React.useEffect(() => {
         if (is_api_initialized) {
-            init();
-            setIsLoading(true);
-            if (!client.is_logged_in) {
-                changeActiveSymbolLoadingState();
-            }
+            changeActiveSymbolLoadingState();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [is_api_initialized]);
